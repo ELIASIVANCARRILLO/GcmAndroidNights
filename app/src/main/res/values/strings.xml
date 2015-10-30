@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">GcmAndroidNights</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="str_device_not_registered_title">Dispositivo no registrado</string>
+    <string name="str_device_not_registered_content">Por favor registre el dispositivo para poder recibir notificaciones</string>
+
+    <string name="str_cancelar">Cancelar</string>
+    <string name="str_aceptar">Aceptar</string>
+</resources>
