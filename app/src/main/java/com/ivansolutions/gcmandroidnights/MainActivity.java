@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         alert.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                new RegIdSender().execute(pwdField.getText().toString());
             }
         });
     }
@@ -104,11 +104,12 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private class RegIdSender extends AsyncTask<Void, Void, String> {
+    private class RegIdSender extends AsyncTask<String, Void, String> {
 
         @Override
-        protected String doInBackground(Void... str_Params) {
+        protected String doInBackground(String... str_Params) {
             String result = "";
+            String nombre = str_Params[0];
 
             try {
                 if (gcm == null) {
@@ -116,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 regid = gcm.register(SENDER_ID);
 
-                URL url = new URL("<Url_php para registrar el dispositivo>");
+                URL url = new URL("http://192.168.0.5/PHPGcmAndroidNights/registerDevice.php");
 
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -125,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 connection.setDoOutput(true);
                 OutputStream wr = connection.getOutputStream();
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(wr, "UTF-8"));
-                writer.write("regid=" + regid);
+                writer.write("nombre=" + nombre + "&gcm_id=" + regid);
                 wr.flush();
 
                 connection.connect();
@@ -143,4 +144,32 @@ public class MainActivity extends AppCompatActivity {
             return result;
         }
     }
+
+    /**
+     *
+     * CREATE TABLE GCM_IDS(
+     ID INTEGER PRIMARY KEY auto_increment,
+     NOMBRE VARCHAR(50) NOT NULL,
+     GCM_ID VARCHAR(200) NOT NULL)
+     *
+     *
+     * <form action="" method="POST">
+     <center>
+     Enviar un mensaje a:<br>
+     <input type="text" name="nombre" id="nombre"/><br>
+     <input type="submit" value=" enviar"/>
+     </center>
+     </form>
+     *
+     *
+     * <?php
+     $id = $_POST["gcm_id"];
+     $nombre = $_POST["nombre"];
+     $con = mysql_connect("localhost","root","root");
+     mysql_select_db("DB_GcmAndroidNights",$con);
+     // change the query depending on your table
+     mysql_query("INSERT INTO GCM_IDS(NOMBRE, GCM_ID) VALUES('".$nombre."', '".$id."')");
+     ?>
+     *
+     */
 }
