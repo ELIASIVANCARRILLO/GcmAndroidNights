@@ -1,6 +1,7 @@
 package com.ivansolutions.gcmandroidnights.receivers;
 
 import android.app.IntentService;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -34,6 +35,10 @@ public class GcmIntenService extends IntentService {
         context = this;
     }
 
+    public GcmIntenService() {
+        this("GcmIntentService");
+    }
+
     @Override
     protected void onHandleIntent(Intent intent) {
 // TODO Auto-generated method stub
@@ -48,7 +53,7 @@ public class GcmIntenService extends IntentService {
 
             if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
 
-                NotifItem notification = new NotifItem(0, "Un Mensaje", new Date());//reemplazar
+                NotifItem notification = new NotifItem(0, msg, new Date());//reemplazar
 
                 sendNotification(notification);
             }
@@ -71,7 +76,9 @@ public class GcmIntenService extends IntentService {
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("GCM Notification")
+                .setContentTitle("Nuevo mensaje")
+                .setAutoCancel(true)
+                .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(item.getContenido()))
                 .setContentText(item.getContenido());
 

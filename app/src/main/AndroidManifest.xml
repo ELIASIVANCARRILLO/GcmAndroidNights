@@ -24,6 +24,8 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
+        <service android:name=".receivers.GcmIntenService" />
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name">
@@ -45,7 +47,7 @@
             android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-                <category android:name="com.techlovejump.gcm" />
+                <category android:name="com.ivansolutions.gcmandroidnights" />
             </intent-filter>
         </receiver>
     </application>
