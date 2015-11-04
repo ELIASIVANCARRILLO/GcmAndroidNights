@@ -16,11 +16,8 @@ import android.widget.EditText;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -119,26 +116,23 @@ public class MainActivity extends AppCompatActivity {
 
                 URL url = new URL("http://192.168.0.5/PHPGcmAndroidNights/registerDevice.php");
 
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                byte[] postDataBytes = ("gcm_id="+regid+""+"&nombre="+nombre).getBytes("UTF-8");
 
-                connection.setRequestMethod("POST");
-                connection.setDoInput(true);
-                connection.setDoOutput(true);
-                OutputStream wr = connection.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(wr, "UTF-8"));
-                writer.write("nombre=" + nombre + "&gcm_id=" + regid);
-                wr.flush();
+                HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
+                conn.setDoOutput(true);
+                conn.getOutputStream().write(postDataBytes);
 
-                connection.connect();
-
-                BufferedReader br = new BufferedReader(new InputStreamReader((connection.getInputStream())));
+                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
 
                 String output;
                 while ((output = br.readLine()) != null) {
                     result = output;
                 }
 
-                connection.disconnect();
+                conn.disconnect();
             } catch (IOException ignored) {
             }
             return result;
