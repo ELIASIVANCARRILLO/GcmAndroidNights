@@ -3,10 +3,15 @@ package com.ivansolutions.gcmandroidnights;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,7 +21,9 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.ivansolutions.gcmandroidnights.adapter.MessageAdapter;
 import com.ivansolutions.gcmandroidnights.data.DataStorage;
+import com.ivansolutions.gcmandroidnights.receivers.GcmIntenService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,19 +33,13 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
-
-    //AIzaSyCmNFLZC-3OQPMEvwp1635glTm1Ifr1-is  ->  server key (para php)
-
-    public static final String EXTRA_MESSAGE = "message";
-    public static final String PROPERTY_REG_ID = "registration_id";
-    static final String TAG = "GCMDemo";
     String SENDER_ID = "416686843422";
     GoogleCloudMessaging gcm;
     String regid;
     Context context;
-    private boolean registered = false;
     private boolean makingRequest = false;
     private ProgressBar pbRegistering = null;
+    private MessageAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,17 +47,50 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         context = getApplicationContext();
+        final RecyclerView rvPrincipal = (RecyclerView) findViewById(R.id.rv_principal);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.appbar);
         setSupportActionBar(toolbar);
 
-        registered = DataStorage.getBooleanPreference(this, "registered");
+        boolean registered = DataStorage.getBooleanPreference(this, "registered");
 
         if (!registered) {
             showRegisterDialog();
         }
 
+        adapter = new MessageAdapter();
 
+        adapter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int pos = rvPrincipal.getChildAdapterPosition(v);
+                Intent i = new Intent(MainActivity.this, DetailActivity.class);
+                i.putExtra("text", AppContext.getList().get(pos).getContenido());
+                startActivity(i);
+            }
+        });
+
+        rvPrincipal.setHasFixedSize(true);
+        rvPrincipal.setAdapter(adapter);
+        rvPrincipal.addItemDecoration(new SimpleDividerItemDecoration(this));
+        rvPrincipal.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        GcmIntenService.activityToRefresh = this;
+        refreshUI();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        GcmIntenService.activityToRefresh = null;
+    }
+
+    public void refreshUI() {
+        adapter.notifyDataSetChanged();
     }
 
     private void showRegisterDialog() {
@@ -138,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 regid = gcm.register(SENDER_ID);
 
-                URL url = new URL("http://192.168.122.62:8888/PHPGcmAndroidNight/registerDevice.php");
+                URL url = new URL("http://192.168.0.5/PHPGcmAndroidNights/registerDevice.php");
 
                 byte[] postDataBytes = ("gcm_id=" + regid + "" + "&nombre=" + nombre).getBytes("UTF-8");
 
@@ -173,6 +207,33 @@ public class MainActivity extends AppCompatActivity {
                 dialog.dismiss();
             } else {
                 Toast.makeText(MainActivity.this, "Hubo un error en el registro", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    public class SimpleDividerItemDecoration extends RecyclerView.ItemDecoration {
+        private Drawable mDivider;
+
+        public SimpleDividerItemDecoration(Context context) {
+            mDivider = ContextCompat.getDrawable(context, R.drawable.recyclerview_divider);
+        }
+
+        @Override
+        public void onDrawOver(Canvas c, RecyclerView parent, RecyclerView.State state) {
+            int left = parent.getPaddingLeft();
+            int right = parent.getWidth() - parent.getPaddingRight();
+
+            int childCount = parent.getChildCount();
+            for (int i = 0; i < childCount; i++) {
+                View child = parent.getChildAt(i);
+
+                RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
+
+                int top = child.getBottom() + params.bottomMargin;
+                int bottom = top + mDivider.getIntrinsicHeight();
+
+                mDivider.setBounds(left, top, right, bottom);
+                mDivider.draw(c);
             }
         }
     }
